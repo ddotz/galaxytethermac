@@ -1,5 +1,5 @@
 #!/bin/bash
-# Stop a previous Galaxy USB Tether launchd job before Installer replaces its
+# Stop a previous Galaxy Tether for Mac launchd job before Installer replaces its
 # files.  The explicit system domain is the boot volume's launchd domain.
 set -eu
 
@@ -7,7 +7,7 @@ LABEL="local.galaxy-usb-tether"
 TARGET_VOLUME="${3:-/}"
 
 if [ "$TARGET_VOLUME" != "/" ]; then
-    echo "Galaxy USB Tether: installation is restricted to the boot volume" >&2
+    echo "Galaxy Tether for Mac: installation is restricted to the boot volume" >&2
     exit 1
 fi
 

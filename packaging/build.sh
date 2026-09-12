@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the Galaxy USB Tether component and product packages.
+# Build the Galaxy Tether for Mac component and product packages.
 # Builds a self-contained arm64 installer from this repository.
 set -euo pipefail
 
@@ -9,13 +9,14 @@ SOURCE_DIR="$ROOT_DIR"
 RELEASE_DIR="$ROOT_DIR/build/release"
 BUILD_DIR="$ROOT_DIR/build/package"
 STAGE_DIR="$BUILD_DIR/payload-root"
-COMPONENT_NAME="GalaxyUSBTether-component.pkg"
+COMPONENT_NAME="GalaxyTetherMac-component.pkg"
 COMPONENT_PKG="$BUILD_DIR/$COMPONENT_NAME"
 DIST="$PACKAGE_DIR/Distribution.xml"
 OUTPUT_DIR="$ROOT_DIR/dist"
-OUTPUT_PKG="$OUTPUT_DIR/Galaxy-USB-Tether-1.0.0-arm64.pkg"
+OUTPUT_PKG="$OUTPUT_DIR/GalaxyTetherMac-1.0.1-arm64.pkg"
+# Keep the installation ID stable so existing users upgrade in place.
 IDENTIFIER="local.galaxy-usb-tether"
-VERSION="1.0.0"
+VERSION="$(cat "$ROOT_DIR/VERSION")"
 
 HELPER_SRC="$RELEASE_DIR/android-tether"
 DYLIB_SRC="$RELEASE_DIR/libusb-1.0.0.dylib"
@@ -31,7 +32,7 @@ CONFIG_DST="$STAGE_DIR/Library/Application Support/GalaxyUSBTether/config"
 PLIST_DST="$STAGE_DIR/Library/LaunchDaemons/$IDENTIFIER.plist"
 LICENSE_DIR="$STAGE_DIR/Library/Application Support/GalaxyUSBTether/licenses"
 
-die() { echo "Galaxy USB Tether package: $*" >&2; exit 1; }
+die() { echo "Galaxy Tether for Mac package: $*" >&2; exit 1; }
 require_file() { [ -f "$1" ] || die "missing required file: $1"; }
 
 [ "$(uname -m)" = arm64 ] || die "Apple Silicon build host required"

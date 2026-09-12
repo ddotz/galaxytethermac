@@ -1,0 +1,58 @@
+#!/bin/bash
+# Install and start the exact Galaxy USB Tether system service.
+set -eu
+
+LABEL="local.galaxy-usb-tether"
+TARGET_VOLUME="${3:-/}"
+
+if [ "$TARGET_VOLUME" != "/" ]; then
+    echo "Galaxy USB Tether: installation is restricted to the boot volume" >&2
+    exit 1
+fi
+
+PLIST="${TARGET_VOLUME}/Library/LaunchDaemons/${LABEL}.plist"
+HELPER="${TARGET_VOLUME}/Library/PrivilegedHelperTools/galaxy-usb-tether"
+CONFIG="${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether/config"
+DYLIB="${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether/lib/libusb-1.0.0.dylib"
+
+for path in "$PLIST" "$HELPER" "$CONFIG" "$DYLIB"; do
+if [ ! -e "$path" ]; then
+        echo "Galaxy USB Tether: missing installed path: $path" >&2
+        exit 1
+    fi
+done
+
+/usr/sbin/chown root:wheel \
+    "${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether" \
+    "${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether/lib"
+/bin/chmod 0755 \
+    "${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether" \
+    "${TARGET_VOLUME}/Library/Application Support/GalaxyUSBTether/lib"
+/usr/sbin/chown root:wheel "$PLIST" "$HELPER" "$CONFIG" "$DYLIB"
+/bin/chmod 0644 "$PLIST" "$CONFIG" "$DYLIB"
+/bin/chmod 0755 "$HELPER"
+
+# Keep retries idempotent if an installer invocation was interrupted after
+# preinstall but before launchd finished removing the old job.
+/bin/launchctl enable "system/${LABEL}"
+/bin/launchctl bootout "system/${LABEL}" >/dev/null 2>&1 || true
+/bin/launchctl bootstrap system "$PLIST"
+
+# RunAtLoad + KeepAlive should make the helper available immediately.  Give
+# launchd a short window to spawn it, then fail the install if it did not.
+running=0
+for _ in {1..20}; do
+    if /bin/launchctl print "system/${LABEL}" 2>/dev/null | /usr/bin/grep -q 'state = running'; then
+        running=1
+        break
+    fi
+    /bin/sleep 0.5
+done
+
+if [ "$running" -ne 1 ]; then
+    echo "Galaxy USB Tether: launchd service did not reach running state" >&2
+    /bin/launchctl print "system/${LABEL}" >&2 || true
+    exit 1
+fi
+
+exit 0

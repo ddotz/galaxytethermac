@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>Galaxy USB Tether</title>
+    <options customize="never" require-scripts="false" rootVolumeOnly="true" hostArchitectures="arm64"/>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <volume-check script="true">
+        <allowed-os-versions>
+            <os-version min="26.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <welcome file="Welcome.html" mime-type="text/html"/>
+    <readme file="ReadMe.html" mime-type="text/html"/>
+    <choices-outline>
+        <line choice="default"/>
+    </choices-outline>
+    <choice id="default" visible="false">
+        <pkg-ref id="local.galaxy-usb-tether"/>
+    </choice>
+    <pkg-ref id="local.galaxy-usb-tether" version="1.0.0" auth="root">GalaxyUSBTether-component.pkg</pkg-ref>
+</installer-gui-script>

@@ -2,9 +2,9 @@
 
 [한국어](README.ko.md)
 
-Galaxy Tether for Mac lets a Mac use a Galaxy phone's mobile internet over USB. It manages the RNDIS connection as a macOS service and reconnects when USB tethering is available.
+Galaxy Tether for Mac lets a Mac use a Galaxy phone's mobile internet over USB. It uses USB tethering only when no other physical network is connected. Wi-Fi and Ethernet take priority.
 
-**Version 1.0.1**
+**Version 1.0.2**
 
 ```text
 Galaxy internet  ->  USB  ->  Mac
@@ -46,11 +46,13 @@ On older Homebrew versions without `brew trust`, omit that command. This is a ma
 
 ## Behavior and limitations
 
-- The service starts at boot and connects when it detects a phone with USB tethering enabled.
+- The service starts at boot. It keeps USB tethering idle while Wi-Fi or Ethernet has an active, configured connection.
+- When that connection disappears, it can use the Galaxy over USB. When Wi-Fi or Ethernet connects again, it releases the USB connection.
+- This policy checks the connection state, not internet reachability. A captive portal or an offline router does not trigger a switch to phone data. VPN and virtual-machine interfaces are not treated as an independent physical connection.
 - No separate Galaxy entry appears in macOS Network settings; the connection uses a virtual interface.
 - Use [Check-Connection.command](tools/Check-Connection.command) to verify actual USB internet access.
 - The connection provides IPv4. IPv6 and every VPN combination are not guaranteed.
-- Installation, automatic service startup, and USB HTTPS access were verified on macOS 26 with One UI 9. Other hardware, a full reboot, and wake from sleep have not been verified.
+- Installation, Wi-Fi priority, fallback to USB with HTTPS access, and release of USB when Wi-Fi returns were verified on macOS 26 with One UI 9. Other hardware, a full reboot, and wake from sleep have not been verified.
 - SIP changes and kernel extensions are not required.
 
 ## Uninstall

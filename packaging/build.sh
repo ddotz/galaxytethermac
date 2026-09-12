@@ -13,7 +13,7 @@ COMPONENT_NAME="GalaxyTetherMac-component.pkg"
 COMPONENT_PKG="$BUILD_DIR/$COMPONENT_NAME"
 DIST="$PACKAGE_DIR/Distribution.xml"
 OUTPUT_DIR="$ROOT_DIR/dist"
-OUTPUT_PKG="$OUTPUT_DIR/GalaxyTetherMac-1.0.1-arm64.pkg"
+OUTPUT_PKG="$OUTPUT_DIR/GalaxyTetherMac-1.0.2-arm64.pkg"
 # Keep the installation ID stable so existing users upgrade in place.
 IDENTIFIER="local.galaxy-usb-tether"
 VERSION="$(cat "$ROOT_DIR/VERSION")"

@@ -1,6 +1,6 @@
 cask "galaxytethermac" do
-  version "1.0.1"
-  sha256 "eef0ec717181612614fa475af3b08c70c9e5fae3db0e6ecac138d517c846c027"
+  version "1.0.2"
+  sha256 "c75671a5a56a36afe3bf3898c60278b11095a464731dfd24f23799bd6a74e887"
 
   url "https://github.com/ddotz/galaxytethermac/releases/download/v#{version}/GalaxyTetherMac-#{version}-arm64.pkg"
   name "Galaxy Tether for Mac"
@@ -16,6 +16,7 @@ cask "galaxytethermac" do
             pkgutil:   "local.galaxy-usb-tether"
 
   caveats <<~EOS
+    Wi-Fi and Ethernet take priority; USB is used only without another connection.
     Your Galaxy provides internet access; your Mac receives it over USB.
     Enable USB tethering in your Galaxy's default USB configuration.
     A background service starts automatically; no Network Settings entry is shown.

@@ -11,6 +11,7 @@
 #include "config.h"
 #include "ipc.h"
 #include "compat.h"
+#include "network_policy.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,7 @@ static void print_usage(const char *prog)
         "  -v, --verbose       Verbose / debug-level logging\n"
         "  -w, --watch         Watch mode: auto-connect when device detected\n"
         "  -V, --version       Show version and exit\n"
+        "      --network-status  Show physical-network priority without root\n"
         "  -h, --help          Show this help\n"
 #ifdef VERSION
         "\nVersion: %s\n"
@@ -438,6 +440,9 @@ static int run_session(int no_route, int no_dns,
                        const char *static_mask_arg,
                        ipc_server_t *ipc)
 {
+    /* Never take over an explicitly connected physical network. */
+    if (network_other_connected(NULL, 0) != 0) return g_running ? 1 : 0;
+
     /* Step 1: Create protocol driver */
     proto_driver_t *drv = proto_rndis_create();
     if (!drv || proto_driver_validate(drv) != 0) {
@@ -531,6 +536,14 @@ static int run_session(int no_route, int no_dns,
         return g_running ? 1 : 0;
     }
 
+    /* Recheck after DHCP in case Wi-Fi connected during USB setup. */
+    if (network_other_connected(NULL, 0) != 0) {
+        utun_close(&tun);
+        usb_close_device(&usb);
+        drv->destroy(drv);
+        return g_running ? 1 : 0;
+    }
+
     /* Step 7: Register network service */
     if (!no_dns) {
         LOG_I("main", "setting DNS servers...");
@@ -588,10 +601,22 @@ static int run_session(int no_route, int no_dns,
     /* Main thread: keepalive and stats */
     time_t last_keepalive = 0;
     time_t last_stats = 0;
+    time_t last_network_check = 0;
+    int yielded_to_network = 0;
     uint64_t prev_tx_bytes = 0, prev_rx_bytes = 0;
 
     while (g_running && atomic_load(&bctx.running)) {
         time_t now = time(NULL);
+
+        if (now - last_network_check >= 1) {
+            last_network_check = now;
+            if (network_other_connected(NULL, 0) != 0) {
+                yielded_to_network = 1;
+                restore_network_state();
+                atomic_store(&bctx.running, 0);
+                break;
+            }
+        }
 
         if (now - last_keepalive >= 30) {
             if (drv->keepalive)
@@ -696,11 +721,20 @@ static int run_session(int no_route, int no_dns,
     usb_close_device(&usb);
     drv->destroy(drv);
 
-    return (disconnected && g_running) ? 1 : 0;
+    return ((disconnected || yielded_to_network) && g_running) ? 1 : 0;
 }
 
 int main(int argc, char **argv)
 {
+    if (argc == 2 && strcmp(argv[1], "--network-status") == 0) {
+        char iface[64];
+        int state = network_other_connected(iface, sizeof(iface));
+        if (state > 0) printf("connected-other-network %s\n", iface);
+        else if (state == 0) puts("no-other-network");
+        else puts("network-status-unavailable");
+        return state < 0 ? 2 : 0;
+    }
+
     /* Load configuration: defaults -> config file -> CLI args */
     tether_config_t cfg;
     config_init_defaults(&cfg);

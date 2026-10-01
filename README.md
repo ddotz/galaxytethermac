@@ -55,6 +55,19 @@ On older Homebrew versions without `brew trust`, omit that command. This is a ma
 - Installation, Wi-Fi priority, fallback to USB with HTTPS access, and release of USB when Wi-Fi returns were verified on macOS 26 with One UI 9. Other hardware, a full reboot, and wake from sleep have not been verified.
 - SIP changes and kernel extensions are not required.
 
+## Tailscale
+
+Tailscale for macOS ignores every `utun` interface when it decides whether the network is up. While the Mac is online only through this tether, Tailscale reports "Network down", stays in `Starting`, and cannot reach peers even though regular internet access works.
+
+Workaround for the standalone Tailscale app (verified with Tailscale 1.102.4): set the `TS_ASSUME_NETWORK_UP_FOR_TEST` knob and restart the network extension.
+
+```sh
+sudo sh -c 'echo TS_ASSUME_NETWORK_UP_FOR_TEST=true > /private/var/root/Library/Containers/io.tailscale.ipn.macsys.network-extension/Data/tailscaled-env.txt'
+sudo pkill -9 -f io.tailscale.ipn.macsys.network-extension
+```
+
+Tailscale then connects, including direct peer connections. The "Network down" warning stays visible because the warning and the pause are checked separately. This is a Tailscale test knob, so an update may change it. To undo, delete `tailscaled-env.txt` and run the `pkill` command again. App Store builds read `~/Library/Containers/io.tailscale.ipn.macos.network-extension/Data/tailscaled-env.txt` instead.
+
 ## Uninstall
 
 ```sh

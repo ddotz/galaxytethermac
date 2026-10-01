@@ -55,6 +55,19 @@ brew install --cask ddotz/galaxytethermac/galaxytethermac
 - macOS 26과 One UI 9 조합에서 설치, Wi-Fi 우선 사용, Wi-Fi 해제 시 USB HTTPS 접속, Wi-Fi 복귀 시 USB 연결 해제를 확인했습니다. 다른 하드웨어, 완전한 재부팅, 잠자기 후 복귀는 아직 확인하지 않았습니다.
 - SIP 변경이나 커널 확장 설치는 필요하지 않습니다.
 
+## Tailscale
+
+macOS용 Tailscale은 네트워크 연결 여부를 판단할 때 `utun` 인터페이스를 모두 무시합니다. 이 테더링으로만 인터넷에 연결된 상태에서는 일반 인터넷이 되더라도 Tailscale이 "Network down"을 표시하고 `Starting` 상태에 멈춰 다른 기기에 연결하지 못합니다.
+
+독립 실행형 Tailscale 앱에서는 `TS_ASSUME_NETWORK_UP_FOR_TEST` 설정을 넣고 네트워크 확장을 재시작하면 됩니다(Tailscale 1.102.4에서 확인).
+
+```sh
+sudo sh -c 'echo TS_ASSUME_NETWORK_UP_FOR_TEST=true > /private/var/root/Library/Containers/io.tailscale.ipn.macsys.network-extension/Data/tailscaled-env.txt'
+sudo pkill -9 -f io.tailscale.ipn.macsys.network-extension
+```
+
+이후 Tailscale이 연결되며 기기 간 직접 연결도 동작합니다. 경고와 일시정지를 따로 판단하기 때문에 "Network down" 경고는 계속 표시됩니다. Tailscale의 테스트용 설정이라 업데이트로 바뀔 수 있습니다. 되돌리려면 `tailscaled-env.txt`를 삭제하고 `pkill` 명령을 다시 실행하세요. App Store 버전은 `~/Library/Containers/io.tailscale.ipn.macos.network-extension/Data/tailscaled-env.txt`를 읽습니다.
+
 ## 제거
 
 ```sh
